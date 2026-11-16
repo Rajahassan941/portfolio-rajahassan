@@ -4,7 +4,25 @@
  * Set NEXT_PUBLIC_SITE_URL in your deployment environment (e.g. https://mahamood.dev).
  * It drives canonical URLs, Open Graph, the sitemap and robots.txt.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+function resolveSiteUrl(): string {
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    // Provided automatically by Vercel (host only, no protocol).
+    process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+  ];
+  for (const raw of candidates) {
+    const value = raw?.replace(/^﻿/, "").trim().replace(/^["']|["']$/g, "");
+    if (!value) continue;
+    try {
+      return new URL(value).origin;
+    } catch {
+      // Ignore malformed values and try the next candidate.
+    }
+  }
+  return "http://localhost:3000";
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const SITE = {
   name: "Mahamood Rajahassan",
